@@ -25,7 +25,7 @@ somewhere in Nushell configuration. In theory, you can manually compile the
 binary, then edit `onibotoke.nu` to replace ONIBOTOKE_BIN with the `onibotoke`
 binary.
 
-A NixOS module is also provided.
+A Home Manager module is also provided, see `flake.nix` or [configuration](#configuration).
 
 ## Detailed usage instructions
 
@@ -116,6 +116,27 @@ as `https://gitlab.freedesktop.orgmesa/mesa.git`.
 `onibotoke` has a few configuration options. Running the tool for the first
 time will generate a default configuration. You can also run `o conf --generate-config` to
 create one manually. It will be created at `$XDG_CONFIG_HOME/onibotoke/config.toml`.
+
+> [!TIP]
+> If you are running functorOS, or have imported the Home Manager module, you
+> should declaratively configure the program using Nix. The options are the
+> same, but you set them as Home Manager options, like below. As usual, options
+> will be merged, it is only necessary to set the options that you want to
+> override from the defaults shown below.
+> ```nix
+> programs.onibotoke = {
+>   enable = true;
+>   settings = {
+>     projects_dir = "${config.home.homeDirectory}/Source";
+>     default_remote = "gh";
+>     remote_aliases = {
+>       gh = "https://github.com/";
+>       cfs = "https://code.functor.systems/";
+>     };
+>     user_aliases = { };
+>   };
+> };
+> ```
 
 Sample config:
 
