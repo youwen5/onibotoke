@@ -1,4 +1,5 @@
 use anyhow::{Context, Result, anyhow, bail};
+use nucleo_picker::{PickerOptions, render::StrRenderer};
 use std::{
     fs::{create_dir_all, read_dir},
     path::PathBuf,
@@ -49,13 +50,17 @@ impl Repo {
     ) -> Result<Option<Repo>> {
         let projects_path = &projects.path;
         let repos_path = projects_path.join("by-user");
-        let resolved_owner = if repos_path.join(&owner).try_exists()? {
+        let resolved_owner = if repos_path.join(owner).try_exists()? {
             owner.clone()
         } else {
             let mut user_candidates = vec![];
             for user in read_dir(projects_path)? {
                 let user = user?;
-                let user = user.file_name().to_str().ok_or(anyhow!("wtf"))?.to_string();
+                let user = user
+                    .file_name()
+                    .to_str()
+                    .ok_or(anyhow!("Issue converting filename to string"))?
+                    .to_string();
                 if user.starts_with(owner) {
                     user_candidates.push(user);
                 }
@@ -63,11 +68,24 @@ impl Repo {
             if user_candidates.is_empty() {
                 return Ok(None);
             }
-            user_candidates[0].to_string()
+            let mut picker = PickerOptions::default().query(owner).picker(StrRenderer);
+
+            if user_candidates.len() > 1 {
+                let injector = picker.injector();
+                for cand in user_candidates {
+                    injector.push(cand);
+                }
+                match picker.pick()? {
+                    Some(opt) => opt.to_string(),
+                    None => panic!("Selected nothing!"),
+                }
+            } else {
+                user_candidates.first().unwrap().to_string()
+            }
         };
         let resolved_repo_name = if repos_path
             .join(&resolved_owner)
-            .join(&repo_name)
+            .join(repo_name)
             .try_exists()?
         {
             repo_name.clone()
@@ -75,7 +93,11 @@ impl Repo {
             let mut repo_candidates = vec![];
             for repo in read_dir(projects_path.join(&resolved_owner))? {
                 let repo = repo?;
-                let repo = repo.file_name().to_str().ok_or(anyhow!("wtf"))?.to_string();
+                let repo = repo
+                    .file_name()
+                    .to_str()
+                    .ok_or(anyhow!("Issue converting filename to string"))?
+                    .to_string();
                 if repo.starts_with(repo_name) {
                     repo_candidates.push(repo);
                 }
@@ -83,7 +105,23 @@ impl Repo {
             if repo_candidates.is_empty() {
                 return Ok(None);
             }
-            repo_candidates[0].to_string()
+
+            if repo_candidates.len() > 1 {
+                let mut picker = PickerOptions::default()
+                    .query(repo_name)
+                    .picker(StrRenderer);
+
+                let injector = picker.injector();
+                for cand in repo_candidates {
+                    injector.push(cand);
+                }
+                match picker.pick()? {
+                    Some(opt) => opt.to_string(),
+                    None => panic!("Selected nothing!"),
+                }
+            } else {
+                repo_candidates.first().unwrap().to_string()
+            }
         };
         Ok(Some(Repo {
             name: resolved_repo_name,
@@ -99,7 +137,7 @@ impl Projects {
             path: PathBuf::from(path)
                 .canonicalize()
                 .expect("failed to canonicalize projects path")
-                .join("./by-user"),
+                .join("by-user"),
         }
     }
     pub fn ensure_dirs_exist(&self) -> Result<()> {
