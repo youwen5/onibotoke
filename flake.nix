@@ -178,27 +178,28 @@
         {
           options.programs.onibotoke.enable = lib.mkEnableOption "onibotoke, a tiny fuzzy project navigation tool";
           options.programs.onibotoke.settings = lib.mkOption {
-            type = lib.types.attrs;
+            type = lib.types.nullOr lib.types.attrs;
             description = ''
               Configuration options for onibotoke. Maps cleanly to the TOML configuration options.
             '';
-            default = {
-              projects_dir = "${config.home.homeDirectory}/Source";
-              default_remote = "gh";
-              remote_aliases = {
-                gh = "https://github.com/";
-                cfs = "https://code.functor.systems/";
-              };
-              user_aliases = { };
-            };
+            default = null;
           };
 
           config.programs.nushell.extraConfig = lib.mkIf config.programs.onibotoke.enable ''
             source "${self.packages.${pkgs.stdenv.hostPlatform.system}.default}/lib/onibotoke.nu"
           '';
-          config.xdg.configFile."onibotoke/config.toml".source = lib.mkIf config.programs.onibotoke.enable (
-            (pkgs.formats.toml { }).generate "onibotoke-config.toml" config.programs.onibotoke.settings
-          );
+          config.programs.onibotoke.settings = lib.mkIf config.programs.onibotoke.enable {
+            projects_dir = "${config.home.homeDirectory}/Source";
+            default_remote = "gh";
+            remote_aliases = {
+              gh = "https://github.com/";
+              cfs = "https://code.functor.systems/";
+            };
+            user_aliases = { };
+          };
+          config.xdg.configFile."onibotoke/config.toml".source = lib.mkIf (
+            config.programs.onibotoke.settings != null
+          ) ((pkgs.formats.toml { }).generate "onibotoke-config.toml" config.programs.onibotoke.settings);
         };
     };
 }
