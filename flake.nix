@@ -166,5 +166,21 @@
           ];
         };
       }
-    );
+    )
+    // {
+      homeManagerModules.default =
+        {
+          pkgs,
+          lib,
+          config,
+          ...
+        }:
+        {
+          options.programs.onibotoke.enable = lib.mkEnableOption "onibotoke, a tiny fuzzy project navigation tool";
+
+          config.programs.nushell.extraConfig = lib.mkIf config.programs.onibotoke.enable ''
+            source "${self.packages.${pkgs.stdenv.hostPlatform.system}.default}/lib/onibotoke.nu"
+          '';
+        };
+    };
 }

@@ -16,6 +16,17 @@ allow you to fast travel around the map.
 
 ![sculptor's idol](https://static.wikia.nocookie.net/shadowsdietwice/images/e/e9/Sculptors_Idol.jpg/revision/latest?cb=20190323220314)
 
+## Installation
+
+Onibotoke is designed for and built into `functorOS`, the functor.systems Linux
+distribution. Hence it is deployed using Nix. Run `nix build` in this repo to
+obtain `result/lib/onibotoke.nu`, then `source <path-to-onibotoke.nu>`
+somewhere in Nushell configuration. In theory, you can manually compile the
+binary, then edit `onibotoke.nu` to replace ONIBOTOKE_BIN with the `onibotoke`
+binary.
+
+A NixOS module is also provided.
+
 ## Detailed usage instructions
 
 Currently, `onibotoke` only works on Nushell. In theory it is easy to add
