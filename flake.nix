@@ -189,13 +189,13 @@
             source "${self.packages.${pkgs.stdenv.hostPlatform.system}.default}/lib/onibotoke.nu"
           '';
           config.programs.onibotoke.settings = {
-            projects_dir = lib.mkDefault "${config.home.homeDirectory}/Source";
-            default_remote = lib.mkDefault "gh";
+            projects_dir = "${config.home.homeDirectory}/Source";
+            default_remote = "gh";
             remote_aliases = {
-              gh = lib.mkDefault "https://github.com/";
-              cfs = lib.mkDefault "https://code.functor.systems/";
+              gh = "https://github.com/";
+              cfs = "https://code.functor.systems/";
             };
-            user_aliases = lib.mkDefault { };
+            user_aliases = { };
           };
           config.xdg.configFile."onibotoke/config.toml".source = lib.mkIf (
             config.programs.onibotoke.settings != null

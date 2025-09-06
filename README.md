@@ -120,9 +120,9 @@ create one manually. It will be created at `$XDG_CONFIG_HOME/onibotoke/config.to
 > [!TIP]
 > If you are running functorOS, or have imported the Home Manager module, you
 > should declaratively configure the program using Nix. The options are the
-> same, but you set them as Home Manager options, like below. As usual, options
-> will be merged, it is only necessary to set the options that you want to
-> override from the defaults shown below.
+> same, but you set them as Home Manager options, like below. Due to a few
+> limitations, it is necessary to call `lib.mkForce` to make alterations to
+> existing options.
 > ```nix
 > programs.onibotoke = {
 >   enable = true;
@@ -130,7 +130,8 @@ create one manually. It will be created at `$XDG_CONFIG_HOME/onibotoke/config.to
 >     projects_dir = "${config.home.homeDirectory}/Source";
 >     default_remote = "gh";
 >     remote_aliases = {
->       gh = "https://github.com/";
+>       # example: override github 
+>       gh = lib.mkForce "git@github.com:";
 >       cfs = "https://code.functor.systems/";
 >     };
 >     user_aliases = { };
