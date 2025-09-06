@@ -142,6 +142,7 @@ trailing `/` or `:` when necessary.
 
 Features I want to implement:
 
+- [ ] Less panics
 - [ ] Smith-Waterman fuzzy matching
 - [ ] Smarter partial matching on usernames by checking if the corresponding repo exists for the a user first.
     - Prompt the user before cloning a new repository and allow them to fuzzy
