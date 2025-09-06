@@ -1,3 +1,4 @@
+
 def --env o [owner_repo remote? --generate-config] {
   if $generate_config {
     read_config
@@ -25,7 +26,7 @@ def --env o [owner_repo remote? --generate-config] {
     }
   }
 
-  cd (cargo run -- --owner $owner_resolved --repo $repo --forge-url $remote_url)
+  cd (^$ONIBOTOKE_BIN --owner $owner_resolved --repo $repo --forge-url $remote_url)
 }
 
 def read_config []: nothing -> record {

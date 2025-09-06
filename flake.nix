@@ -128,7 +128,22 @@
         };
 
         packages = {
-          default = onibotoke-crate;
+          inherit onibotoke-crate;
+          default = pkgs.stdenvNoCC.mkDerivation {
+            pname = "onibotoke";
+            version = "0.1.0";
+
+            src = ./.;
+
+            buildPhase = ''
+              echo "const ONIBOTOKE_BIN = '${onibotoke-crate}/bin/onibotoke'" > temp.txt
+              cat temp.txt ./wrappers/onibotoke.nu >> ./built.nu
+            '';
+
+            installPhase = ''
+              install -Dm755 ./built.nu $out/lib/onibotoke.nu
+            '';
+          };
         };
 
         apps.default = flake-utils.lib.mkApp {
