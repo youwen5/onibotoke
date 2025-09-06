@@ -1,4 +1,8 @@
-def --env o [owner_repo remote?] {
+def --env o [owner_repo remote? --generate-config] {
+  if $generate_config {
+    read_config
+    exit 0
+  }
   let s = $owner_repo | split row '/'
   let owner = $s | get 0
   let repo = $s | get 1
@@ -29,7 +33,7 @@ def read_config []: nothing -> record {
 	projects_dir: $"($env.HOME)/Source"
 	default_remote: "gh"
 	remote_aliases: {
-	  gh: "git@github.com:"
+	  gh: "https://github.com/"
 	}
 	user_aliases: { }
   }
@@ -43,7 +47,8 @@ def read_config []: nothing -> record {
   mkdir $config_dir
   let config_file = $config_dir | path join "config.toml"
   if not ($config_file | path exists) {
-	$default_config | save $config_file
+    $default_config | save $config_file
+    print $"It seems you're running onibotoke for the first time, a default configuration was generated at ($config_file | into string)"
   }
   let parsed_config: table = open $config_file
   let parsed_config = $parsed_config | update projects_dir {|row| ($row.projects_dir | path parse)}
