@@ -188,15 +188,17 @@
           config.programs.nushell.extraConfig = lib.mkIf config.programs.onibotoke.enable ''
             source "${self.packages.${pkgs.stdenv.hostPlatform.system}.default}/lib/onibotoke.nu"
           '';
-          config.programs.onibotoke.settings = lib.mkIf config.programs.onibotoke.enable {
-            projects_dir = "${config.home.homeDirectory}/Source";
-            default_remote = "gh";
-            remote_aliases = {
-              gh = "https://github.com/";
-              cfs = "https://code.functor.systems/";
-            };
-            user_aliases = { };
-          };
+          config.programs.onibotoke.settings = lib.mkIf config.programs.onibotoke.enable (
+            lib.mkDefault {
+              projects_dir = "${config.home.homeDirectory}/Source";
+              default_remote = "gh";
+              remote_aliases = {
+                gh = "https://github.com/";
+                cfs = "https://code.functor.systems/";
+              };
+              user_aliases = { };
+            }
+          );
           config.xdg.configFile."onibotoke/config.toml".source = lib.mkIf (
             config.programs.onibotoke.settings != null
           ) ((pkgs.formats.toml { }).generate "onibotoke-config.toml" config.programs.onibotoke.settings);
