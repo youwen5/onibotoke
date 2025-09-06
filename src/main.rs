@@ -1,5 +1,8 @@
-use anyhow::{Context, Result, bail};
-use std::{fs::create_dir_all, path::PathBuf};
+use anyhow::{Context, Result, anyhow, bail};
+use std::{
+    fs::{create_dir_all, read_dir},
+    path::PathBuf,
+};
 
 use clap::Parser;
 
@@ -32,9 +35,61 @@ struct Repo {
     forge_url: String,
 }
 
+/// A fully resolved repository
 impl Repo {
     pub fn get_clone_url(&self) -> String {
         self.forge_url.clone() + &self.owner + "/" + &self.name
+    }
+    /// Fuzzily find a repository
+    pub fn from_fuzzy(
+        projects: &Projects,
+        owner: String,
+        repo_name: String,
+        forge_url: String,
+    ) -> Result<Option<Repo>> {
+        let projects_path = &projects.path;
+        let repos_path = projects_path.join("by-user");
+        let resolved_owner = if repos_path.join(&owner).try_exists()? {
+            owner.clone()
+        } else {
+            let mut user_candidates = vec![];
+            for user in read_dir(projects_path)? {
+                let user = user?;
+                let user = user.file_name().to_str().ok_or(anyhow!("wtf"))?.to_string();
+                if user.starts_with(&owner) {
+                    user_candidates.push(user);
+                }
+            }
+            if user_candidates.is_empty() {
+                return Ok(None);
+            }
+            user_candidates[0].to_string()
+        };
+        let resolved_repo_name = if repos_path
+            .join(&resolved_owner)
+            .join(&repo_name)
+            .try_exists()?
+        {
+            repo_name.clone()
+        } else {
+            let mut repo_candidates = vec![];
+            for repo in read_dir(projects_path.join(&resolved_owner))? {
+                let repo = repo?;
+                let repo = repo.file_name().to_str().ok_or(anyhow!("wtf"))?.to_string();
+                if repo.starts_with(&repo_name) {
+                    repo_candidates.push(repo);
+                }
+            }
+            if repo_candidates.is_empty() {
+                return Ok(None);
+            }
+            repo_candidates[0].to_string()
+        };
+        Ok(Some(Repo {
+            name: resolved_repo_name,
+            owner: resolved_owner,
+            forge_url,
+        }))
     }
 }
 
@@ -85,16 +140,16 @@ fn main() {
     let projects = Projects::from(PROJECTS_PATH.to_string());
     projects.ensure_dirs_exist().unwrap();
 
-    let repo = Repo {
-        owner: args.owner,
-        name: args.repo,
-        forge_url: args.forge_url,
-    };
+    let repo = Repo::from_fuzzy(&projects, args.owner, args.repo, args.forge_url)
+        .unwrap()
+        .expect("owner/repo didn't fuzzily match any value.");
 
     println!(
         "{}",
         projects
             .get_repo_path_that_exists(&repo)
+            .unwrap()
+            .canonicalize()
             .unwrap()
             .to_str()
             .unwrap()
