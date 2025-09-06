@@ -43,9 +43,9 @@ impl Repo {
     /// Fuzzily find a repository
     pub fn from_fuzzy(
         projects: &Projects,
-        owner: String,
-        repo_name: String,
-        forge_url: String,
+        owner: &String,
+        repo_name: &String,
+        forge_url: &String,
     ) -> Result<Option<Repo>> {
         let projects_path = &projects.path;
         let repos_path = projects_path.join("by-user");
@@ -56,7 +56,7 @@ impl Repo {
             for user in read_dir(projects_path)? {
                 let user = user?;
                 let user = user.file_name().to_str().ok_or(anyhow!("wtf"))?.to_string();
-                if user.starts_with(&owner) {
+                if user.starts_with(owner) {
                     user_candidates.push(user);
                 }
             }
@@ -76,7 +76,7 @@ impl Repo {
             for repo in read_dir(projects_path.join(&resolved_owner))? {
                 let repo = repo?;
                 let repo = repo.file_name().to_str().ok_or(anyhow!("wtf"))?.to_string();
-                if repo.starts_with(&repo_name) {
+                if repo.starts_with(repo_name) {
                     repo_candidates.push(repo);
                 }
             }
@@ -88,7 +88,7 @@ impl Repo {
         Ok(Some(Repo {
             name: resolved_repo_name,
             owner: resolved_owner,
-            forge_url,
+            forge_url: forge_url.to_string(),
         }))
     }
 }
@@ -140,9 +140,15 @@ fn main() {
     let projects = Projects::from(PROJECTS_PATH.to_string());
     projects.ensure_dirs_exist().unwrap();
 
-    let repo = Repo::from_fuzzy(&projects, args.owner, args.repo, args.forge_url)
-        .unwrap()
-        .expect("owner/repo didn't fuzzily match any value.");
+    let repo = match Repo::from_fuzzy(&projects, &args.owner, &args.repo, &args.forge_url).unwrap()
+    {
+        Some(x) => x,
+        None => Repo {
+            owner: args.owner,
+            name: args.repo,
+            forge_url: args.forge_url,
+        },
+    };
 
     println!(
         "{}",
