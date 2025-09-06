@@ -153,6 +153,22 @@ impl Projects {
         self.with_repo_path(repo).try_exists().context("Could not determine whether repo exists normally for some reason. Probably a filesystem and/or permission error.")
     }
     fn clone_repo(&self, repo: &Repo) -> Result<()> {
+        let msg = "clone ".to_string() + &repo.get_clone_url();
+        let options = vec![msg, "exit".to_string()];
+        let mut picker = PickerOptions::default().picker(StrRenderer);
+
+        let injector = picker.injector();
+        for cand in options {
+            injector.push(cand);
+        }
+        let selection = match picker.pick()? {
+            Some(opt) => opt.to_string(),
+            None => panic!("Selected nothing!"),
+        };
+        if selection == "exit" {
+            std::process::exit(0);
+        }
+
         let git_clone = std::process::Command::new("git")
             .arg("clone")
             .arg(repo.get_clone_url())
